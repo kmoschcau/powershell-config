@@ -25,7 +25,8 @@ Set-PSReadLineOption -PromptText '> '
 try {
   Set-PSReadLineOption -PredictionSource History
 } catch [System.Management.Automation.ParameterBindingException] {
-  # This means we deal with a version where this is not supported, just ignore it
+  # This means we deal with a version where this is not supported, just ignore
+  # it
 }
 
 # theming {{{1
@@ -67,8 +68,8 @@ function Pr_Italic {
 }
 
 # color definitions {{{2
-$Pink = '#ff00ff'
-$Black = '#000000'
+$Pink          = '#ff00ff'
+$Black         = '#000000'
 
 $Red500        = '#f44336'
 $Blue50        = '#e3f2fd'
@@ -88,33 +89,33 @@ $Grey400       = '#bdbdbd'
 $Grey500       = '#9e9e9e'
 $Grey700       = '#616161'
 
-$Test = "$(Pr_Fg($Pink))$(Pr_Bg($Black))"
-$Default = 'white'
+$Test          = "$(Pr_Fg($Pink))$(Pr_Bg($Black))"
+$Default       = 'white'
 
 # syntax colors {{{2
 Set-PSReadLineOption -Colors @{
-  Command = Pr_Fg($Teal500)
-  Comment = Pr_Fg($Grey500)
+  Command            = Pr_Fg($Teal500)
+  Comment            = Pr_Fg($Grey500)
   ContinuationPrompt = Pr_Fg($Grey400)
-  Default = Pr_Fg($Grey700)
-  Emphasis = Pr_Bg($Yellow500)
-  Error = "$(Pr_Fg($Grey50))$(Pr_Bg($Red500))"
-  InlinePrediction = Pr_Fg($Grey500)
-  Keyword = "$(Pr_Bold)$(Pr_Fg($Orange600))"
-  Member = Pr_Fg($Blue500)
-  Number = "$(Pr_Fg($Blue600))$(Pr_Bg($Blue50))"
-  Operator = Pr_Fg($Orange600)
-  Parameter = "$(Pr_Italic)$(Pr_Fg($Orange500))"
-  Selection = Pr_Bg($Cyan100)
-  String = "$(Pr_Fg($Green600))$(Pr_Bg($Green50))"
-  Type = Pr_Fg($Green500)
-  Variable = Pr_Fg($LightGreen500)
+  Default            = Pr_Fg($Grey700)
+  Emphasis           = Pr_Bg($Yellow500)
+  Error              = "$(Pr_Fg($Grey50))$(Pr_Bg($Red500))"
+  InlinePrediction   = Pr_Fg($Grey500)
+  Keyword            = "$(Pr_Bold)$(Pr_Fg($Orange600))"
+  Member             = Pr_Fg($Blue500)
+  Number             = "$(Pr_Fg($Blue600))$(Pr_Bg($Blue50))"
+  Operator           = Pr_Fg($Orange600)
+  Parameter          = "$(Pr_Italic)$(Pr_Fg($Orange500))"
+  Selection          = Pr_Bg($Cyan100)
+  String             = "$(Pr_Fg($Green600))$(Pr_Bg($Green50))"
+  Type               = Pr_Fg($Green500)
+  Variable           = Pr_Fg($LightGreen500)
 }
 
 # host private data colors {{{2
 if ($PSVersionTable.PSVersion.Major -ge 7) {
-  (Get-Host).PrivateData.FormatAccentColor       = 'Green'
-  (Get-Host).PrivateData.ErrorAccentColor        = 'Cyan'
+  (Get-Host).PrivateData.FormatAccentColor     = 'Green'
+  (Get-Host).PrivateData.ErrorAccentColor      = 'Cyan'
 }
 (Get-Host).PrivateData.ErrorForegroundColor    = 'White'
 (Get-Host).PrivateData.ErrorBackgroundColor    = 'DarkRed'
@@ -131,7 +132,8 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 Remove-Item 'Function:Pr_*'
 
 # Prompt {{{1
-if ($env:TERM -match '^xterm-256color' -and $PSVersionTable.PSVersion.Major -ge 6) {
+if ($env:TERM -match '^xterm-256color' -and `
+    $PSVersionTable.PSVersion.Major -ge 6) {
   $SeparatorChar = ""
 } else {
   $SeparatorChar = ">"
