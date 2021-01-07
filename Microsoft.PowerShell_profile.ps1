@@ -1,21 +1,10 @@
 # vim: foldmethod=marker
 
-# Load modules {{{1
-Import-Module posh-git
-Import-Module posh-sshell
-
-# Automatically start the SSH agent
-# This does not seem to work!
-# Start-SshAgent -Quiet
-
 # options {{{1
 # PSReadLine {{{2
 
 # Change the edit mode to Vi
 Set-PSReadLineOption -EditMode Vi
-
-# Set the text to change color in the prompt on syntax error
-Set-PSReadLineOption -PromptText '> '
 
 # Set the indicator style for Vi normal mode
 # TODO: figure this out later
@@ -53,10 +42,18 @@ function Pr_Fg {
   "$([char]0x1b)[38;$(Pr_CssColorToSGRParameters($CssColor))m"
 }
 
+function Pr_Fg_Default {
+  "$([char]0x1b)[39m"
+}
+
 function Pr_Bg {
   Param ([string]$CssColor)
 
   "$([char]0x1b)[48;$(Pr_CssColorToSGRParameters($CssColor))m"
+}
+
+function Pr_Bg_Default {
+  "$([char]0x1b)[49m"
 }
 
 function Pr_Bold {
@@ -67,24 +64,35 @@ function Pr_Italic {
   "$([char]0x1b)[3m"
 }
 
+function Pr_Reset {
+  "$([char]0x1b)[0m"
+}
+
 # color definitions {{{2
 $Pink          = '#ff00ff'
 $Black         = '#000000'
 
+$Red300        = '#e57373'
 $Red500        = '#f44336'
+$RedA100       = '#ff8a80'
+$RedA200       = '#ff5252'
 $Blue50        = '#e3f2fd'
 $Blue500       = '#2196f3'
 $Blue600       = '#1e88e5'
+$LightBlueA100 = '#80d8ff'
 $Cyan100       = '#b2ebf2'
 $Teal500       = '#009688'
 $Green50       = '#e8f5e9'
 $Green500      = '#4caf50'
 $Green600      = '#43a047'
+$GreenA700     = '#00c853'
 $LightGreen500 = '#8bc34a'
 $Yellow500     = '#ffeb3b'
+$Yellow600     = '#fdd835'
 $Orange500     = '#ff9800'
 $Orange600     = '#fb8c00'
 $Grey50        = '#fafafa'
+$Grey300       = '#e0e0e0'
 $Grey400       = '#bdbdbd'
 $Grey500       = '#9e9e9e'
 $Grey700       = '#616161'
@@ -128,15 +136,320 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 (Get-Host).PrivateData.ProgressForegroundColor = 'Black'
 (Get-Host).PrivateData.ProgressBackgroundColor = 'Cyan'
 
-# Clean up {{{2
-Remove-Item 'Function:Pr_*'
-
 # Prompt {{{1
+# Continuation {{{2
 if ($env:TERM -match '^xterm-256color' -and `
     $PSVersionTable.PSVersion.Major -ge 6) {
-  $SeparatorChar = ""
+  $SeparatorChar = ''
+  $SeperatorChar2 = ''
 } else {
-  $SeparatorChar = ">"
+  $SeparatorChar = '>'
+  $SeperatorChar2 = '>'
+}
+Set-PSReadLineOption -ContinuationPrompt "$SeparatorChar"
+
+# Syntax error indicator {{{2
+# Set the text to change color in the prompt on syntax error
+Set-PSReadLineOption -PromptText "$SeparatorChar "
+
+# customize the prompt {{{2
+# git prompt functions {{{3
+# repo info {{{4
+function pwsh_git_prompt_repo_info {
+  $Result =
+    (git rev-parse --git-dir --is-inside-git-dir --is-bare-repository 2>$null)
+
+  if ($Result) {
+    $Result[0],
+    ($Result[1] -eq 'true'),
+    ($Result[2] -eq 'true')
+  }
 }
 
-Set-PSReadLineOption -ContinuationPrompt "$SeparatorChar"
+# state info {{{4
+function pwsh_git_prompt_state_info {
+  Param (
+    [string]
+    $GitDir,
+
+    [boolean]
+    $InsideGitDir,
+
+    [boolean]
+    $BareRepo
+  )
+
+  $Detached = $False
+  $LastTag = (git describe --tags --abbrev=0 2>$null)
+
+  # Read the current operation and some additional info from git files.
+  if (Test-Path -PathType Container -Path $GitDir\rebase-merge) {
+    $Step = (Get-Content $GitDir\rebase-merge\msgnum)
+    $Totel = (Get-Conent $GitDir\rebase-merge\end)
+    if (Test-Path -PathType Leaf -Path $GitDir\interactive) {
+      $Operation = 'REBASE-i'
+    } else {
+      $Operation = 'REBASE-m'
+    }
+  } else {
+    if (Test-Path -PathType Container -Path $GitDir\rebase-apply) {
+      $Step = (Get-Content $GitDir\rebase-apply\next)
+      $Totel = (Get-Content $GitDir\rebase-apply\last)
+      if (Test-Path -PathType Leaf -Path $GitDir\rebase-apply\rebasing) {
+        $Operation = 'REBASE'
+      } elseif (Test-Path -PathType Leaf -Path $GitDir\rebase-apply\applying) {
+        $Operation = 'AM'
+      } else {
+        $Operation = 'AM/REBASE'
+      }
+    } elseif (Test-Path -PathType Leaf -Path $GitDir\MERGE_HEAD) {
+      $Operation = 'MERGING'
+    } elseif (Test-Path -PathType Leaf -Path $GitDir\CHERRY_PICK_HEAD) {
+      $Operation = 'CHERRY-PICKING'
+    } elseif (Test-Path -PathType Leaf -Path $GitDir\REVERT_HEAD) {
+      $Operation = 'REVERTING'
+    } elseif (Test-Path -PathType Leaf -Path $GitDir\BISECT_LOG) {
+      $Operation = 'BISECTING'
+    }
+  }
+
+  # If there are steps and total, add it do the opration.
+  if ($Step -and $Total) {
+    $Operation += " $Step/$Total"
+  }
+
+  # Get a ref name to show.
+  # First, set the branch name from a symbolic ref.
+  $Branch = (git symbolic-ref --short HEAD 2>$null)
+  $OpStatus = $LastExitCode
+  if ($OpStatus -ne '' -and $OpStatus -ne 0) {
+    # If the symbolic ref check returned non-zero, we are in a detached head
+    # state.
+    $Detached = $true
+    # Instead get the closest newer ref name (branch or tag).
+    $Branch = (git describe --contains --all HEAD 2>$null)
+    $OpStatus = $LastExitCode
+    if ($OpStatus -ne '' -and $OpStatus -ne 0) {
+      # If this fails for some other reason, we just show the SHA of the commit.
+      $Branch = (git rev-parse --short HEAD 2>$null)
+      $OpStatus = $LastExitCode
+      if ($OpStatus -ne '' -and $OpStatus -ne 0) {
+        # If even that fails, use "unknown".
+        $Branch = 'unknown'
+      }
+    }
+  }
+
+  # Check if we are inside a git dir or if the repo is a bare repo.
+  if ($InsideGitDir -eq $true) {
+    if ($BareRepo -eq $true) {
+      $DirWarning = 'BARE'
+    } else {
+      $DirWarning = 'GIT DIR'
+    }
+  }
+
+  $Operation,
+  $Branch,
+  $Detached,
+  $DirWarning,
+  $LastTag
+}
+
+# dirty count {{{4
+function pwsh_git_prompt_dirty {
+  (git diff --name-only --diff-filter=u 2>$null | Measure-Object -Line).Lines
+}
+
+# staged count {{{4
+function pwsh_git_prompt_staged {
+  (git diff --staged --name-only 2>$null | Measure-Object -Line).Lines
+}
+
+# unmerged count {{{4
+function pwsh_git_prompt_unmerged {
+  (git diff --name-only --diff-filter=U 2>$null | Measure-Object -Line).Lines
+}
+
+# untracked count {{{4
+function pwsh_git_prompt_untracked {
+  (git ls-files --others --exclude-standard -- `
+       (git rev-parse --show-toplevel) 2>$null | Measure-Object -Line).Lines
+}
+
+# stashed count {{{4
+function pwsh_git_prompt_stashed {
+  git rev-list --walk-reflogs --count refs/stash 2>$null
+}
+
+# upstream counts {{{4
+function pwsh_git_prompt_upstream {
+  -split (git rev-list --count --left-right --cherry-mark '@{upstream}'...HEAD `
+          2>$null)
+}
+
+# main git prompt piece {{{4
+function pwsh_git_prompt {
+  # First check if git is installed. If not exit with error.
+  if (Get-Command git) {
+    # throw 'Git is not installed'
+  }
+
+  $RepoInfo = (pwsh_git_prompt_repo_info)
+
+  # Check if inside a git repository and exit silently, if not.
+  if (!$RepoInfo) {
+    # return
+  }
+
+  # Get some ref information.
+  $StateInfo  = (pwsh_git_prompt_state_info @RepoInfo)
+  $Operation  = $StateInfo[0]
+  $Branch     = $StateInfo[1]
+  $Detached   = $StateInfo[2]
+  $DirWarning = $StateInfo[3]
+  $LastTag    = $StateInfo[4]
+
+  # Prepare some variables
+  $Dirty     = (pwsh_git_prompt_dirty)
+  $Staged    = (pwsh_git_prompt_staged)
+  $Unmerged  = (pwsh_git_prompt_unmerged)
+  $Stashes   = (pwsh_git_prompt_stashed)
+  $Untracked = (pwsh_git_prompt_untracked)
+
+  $UpstreamInfo = (pwsh_git_prompt_upstream)
+  if ($UpstreamInfo) {
+    $Behind = $UpstreamInfo[0]
+    $Ahead = $UpstreamInfo[1]
+    $CherryEqual = $UpstreamInfo[2]
+  }
+
+  $OutString = "$(Pr_Fg($Grey50))$(Pr_Bg($Grey700)) "
+
+  if ($DirWarning) {
+    $OutString += "$(Pr_Fg($Orange500))"
+    $OutString += "$DirWarning"
+    $OutString += "$(Pr_Fg($Grey300)) $SeperatorChar2 $(Pr_Fg($Grey50))"
+  }
+
+  if ($Operation) {
+    $OutString += "$(Pr_Fg($Orange500))"
+    $OutString += "$Operation"
+    $OutString += "$(Pr_Fg($Grey300)) $SeperatorChar2 $(Pr_Fg($Grey50))"
+  }
+
+  if ($LastTag) {
+    $OutString += "$(Pr_Fg($Yellow600))"
+    $OutString += "$LastTag"
+    $OutString += "$(Pr_Fg($Grey300)) $SeperatorChar2 $(Pr_Fg($Grey50))"
+  }
+
+  if ($Branch) {
+    if ($Detached) {
+      $OutString += "$(Pr_Fg($RedA100))"
+    }
+    $OutString += $Branch
+    if ($Detached) {
+      $OutString += "$(Pr_Fg($Grey50))"
+    }
+    $OutString += ' '
+  }
+
+  if ($Behind -and $Behind -ne 0) {
+    $OutString += "$(Pr_Fg($LightBlueA100))↓$Behind$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Ahead -and $Ahead -ne 0) {
+    $OutString += "$(Pr_Fg($LightBlueA100))↑$Ahead$(Pr_Fg($Grey50)) "
+  }
+
+  if ($CherryEqual -and $CherryEqual -ne 0) {
+    $OutString += "$(Pr_Fg($LightBlueA100))🍒$CherryEqual$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Staged -and $Staged -ne 0 -or `
+      $Dirty -and $Dirty -ne 0 -or `
+      $Stashes -and $Stashes -ne 0 -or `
+      $Untracked -and $Untracked -ne 0) {
+    $OutString += "$(Pr_Fg($Grey300))$SeperatorChar2$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Stashes -and $Stashes -ne 0) {
+    $OutString += "$(Pr_Fg($Yellow500))⚑ $Stashes$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Staged -and $Staged -ne 0) {
+    $OutString += "$(Pr_Fg($GreenA700))● $Staged$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Unmerged -and $Unmerged -ne 0) {
+    $OutString += "$(Pr_Fg($Red300))✖ $Unmerged$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Dirty -and $Dirty -ne 0) {
+    $OutString += "$(Pr_Fg($RedA100))✚ $Dirty$(Pr_Fg($Grey50)) "
+  }
+
+  if ($Untracked -and $Untracked -ne 0) {
+    $OutString += "$(Pr_Fg($RedA200))… $Untracked$(Pr_Fg($Grey50)) "
+  }
+
+  $OutString
+}
+
+# powershell prompt function {{{3
+function Prompt {
+  # get the status first, so it is not overwritten by anything in the prompt
+  # function
+  $LastSuccess = $?
+  $LastStatus = $LastExitCode
+
+  # separator escape sequence variables
+  $SepFg = "$(Pr_Fg_Default)"
+  $SepBg = "$(Pr_Bg_Default)"
+
+  $OutString = ''
+
+  # set the starting colors
+  $OutString += "$(Pr_Fg($Grey50))$(Pr_Bg($Grey400))"
+
+  # add the current working directory
+  $OutString += " $((Get-Location).Path) "
+  $SepFg = $Grey400
+
+  $GitStatus = (pwsh_git_prompt)
+  if ($LastExitCode -eq 0 -and $GitStatus) {
+    $SepBg = $Grey700
+    $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
+    $OutString += "$(Pr_Fg($Grey50))"
+    $OutString += $GitStatus
+    $SepFg = $Grey700
+  }
+
+  # add the last status
+  if (!$LastSuccess) {
+    $SepBg = $Red500
+    $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
+    $OutString += "$(Pr_Fg($Grey50))"
+    if ($LastStatus) {
+      $OutString += " $LastStatus "
+    }
+    $SepFg = $Red500
+  }
+
+  # add a seperator transition for the "PromptText" option
+  $SepBg = $Grey700
+  $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
+  $SepFg = $Grey700
+
+  # add final separator
+  $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg_Default)$SeparatorChar"
+
+  # reset colors and add some padding
+  $OutString += "$(Pr_Reset) "
+
+  Write-Output $OutString
+}
+
+# Clean up {{{1
+# Remove-Item 'Function:Pr_*'
