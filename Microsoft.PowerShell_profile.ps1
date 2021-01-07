@@ -18,6 +18,35 @@ try {
   # it
 }
 
+# helper functions {{{1
+function Pr_MinifyPath {
+  Param (
+    [string]
+    $OrigPath,
+
+    [uint32]
+    $LastLength = 10
+  )
+
+  $MatchResult = [Regex]::Matches($OrigPath, '\\')
+  if ($MatchResult.Success) {
+    $Separator = '\\'
+  } else {
+    $Separator = '/'
+  }
+  $Pieces = $OrigPath -split $Separator
+  $AllButLast = $Pieces | Select-Object -SkipLast 1
+  if ($Pieces[-1].Length -gt $LastLength) {
+    $Last = "$($Pieces[-1].substring(0, $LastLength))…"
+  } else {
+    $Last = $Pieces[-1]
+  }
+
+  $AllButLast = ($AllButLast | foreach-object { $_[0] }) -join $Separator[0]
+
+  $AllButLast, $Last -join $Separator[0]
+}
+
 # theming {{{1
 # helper functions {{{2
 function Pr_CssColorToSGRParameters {
@@ -291,15 +320,15 @@ function pwsh_git_prompt_upstream {
 # main git prompt piece {{{4
 function pwsh_git_prompt {
   # First check if git is installed. If not exit with error.
-  if (Get-Command git) {
-    # throw 'Git is not installed'
+  if (!(Get-Command git)) {
+    throw 'Git is not installed'
   }
 
   $RepoInfo = (pwsh_git_prompt_repo_info)
 
   # Check if inside a git repository and exit silently, if not.
   if (!$RepoInfo) {
-    # return
+    return
   }
 
   # Get some ref information.
@@ -348,7 +377,7 @@ function pwsh_git_prompt {
     if ($Detached) {
       $OutString += "$(Pr_Fg($RedA100))"
     }
-    $OutString += $Branch
+    $OutString += Pr_MinifyPath($Branch)
     if ($Detached) {
       $OutString += "$(Pr_Fg($Grey50))"
     }
@@ -414,11 +443,11 @@ function Prompt {
   $OutString += "$(Pr_Fg($Grey50))$(Pr_Bg($Grey400))"
 
   # add the current working directory
-  $OutString += " $((Get-Location).Path) "
+  $OutString += " $(Pr_MinifyPath((Get-Location).Path)) "
   $SepFg = $Grey400
 
   $GitStatus = (pwsh_git_prompt)
-  if ($LastExitCode -eq 0 -and $GitStatus) {
+  if ($GitStatus) {
     $SepBg = $Grey700
     $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
     $OutString += "$(Pr_Fg($Grey50))"
