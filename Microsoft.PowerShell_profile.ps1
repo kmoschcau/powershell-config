@@ -140,11 +140,11 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 # Continuation {{{2
 if ($env:TERM -match '^xterm-256color' -and `
     $PSVersionTable.PSVersion.Major -ge 6) {
-  $SeparatorChar = ''
-  $SeperatorChar2 = ''
+  $SeparatorChar  = ''
+  $SeparatorChar2 = ''
 } else {
-  $SeparatorChar = '>'
-  $SeperatorChar2 = '>'
+  $SeparatorChar  = '>'
+  $SeparatorChar2 = '>'
 }
 Set-PSReadLineOption -ContinuationPrompt "$SeparatorChar"
 
@@ -284,7 +284,7 @@ function pwsh_git_prompt_stashed {
 
 # upstream counts {{{4
 function pwsh_git_prompt_upstream {
-  -split (git rev-list --count --left-right --cherry-mark '@{upstream}'...HEAD `
+  -split (git rev-list --count --left-right --cherry-mark '@{upstream}...HEAD' `
           2>$null)
 }
 
@@ -329,19 +329,19 @@ function pwsh_git_prompt {
   if ($DirWarning) {
     $OutString += "$(Pr_Fg($Orange500))"
     $OutString += "$DirWarning"
-    $OutString += "$(Pr_Fg($Grey300)) $SeperatorChar2 $(Pr_Fg($Grey50))"
+    $OutString += "$(Pr_Fg($Grey300)) $SeparatorChar2 $(Pr_Fg($Grey50))"
   }
 
   if ($Operation) {
     $OutString += "$(Pr_Fg($Orange500))"
     $OutString += "$Operation"
-    $OutString += "$(Pr_Fg($Grey300)) $SeperatorChar2 $(Pr_Fg($Grey50))"
+    $OutString += "$(Pr_Fg($Grey300)) $SeparatorChar2 $(Pr_Fg($Grey50))"
   }
 
   if ($LastTag) {
     $OutString += "$(Pr_Fg($Yellow600))"
     $OutString += "$LastTag"
-    $OutString += "$(Pr_Fg($Grey300)) $SeperatorChar2 $(Pr_Fg($Grey50))"
+    $OutString += "$(Pr_Fg($Grey300)) $SeparatorChar2 $(Pr_Fg($Grey50))"
   }
 
   if ($Branch) {
@@ -367,11 +367,11 @@ function pwsh_git_prompt {
     $OutString += "$(Pr_Fg($LightBlueA100))🍒$CherryEqual$(Pr_Fg($Grey50)) "
   }
 
-  if ($Staged -and $Staged -ne 0 -or `
-      $Dirty -and $Dirty -ne 0 -or `
-      $Stashes -and $Stashes -ne 0 -or `
-      $Untracked -and $Untracked -ne 0) {
-    $OutString += "$(Pr_Fg($Grey300))$SeperatorChar2$(Pr_Fg($Grey50)) "
+  if (($Staged -and $Staged -ne 0) -or `
+      ($Dirty -and $Dirty -ne 0) -or `
+      ($Stashes -and $Stashes -ne 0) -or `
+      ($Untracked -and $Untracked -ne 0)) {
+    $OutString += "$(Pr_Fg($Grey300))$SeparatorChar2$(Pr_Fg($Grey50)) "
   }
 
   if ($Stashes -and $Stashes -ne 0) {
