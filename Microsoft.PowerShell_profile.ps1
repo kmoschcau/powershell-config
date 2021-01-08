@@ -28,6 +28,8 @@ function Pr_MinifyPath {
     $LastLength = 10
   )
 
+  Write-Debug "Pr_MinifyPath($OrigPath, $LastLength)"
+
   $MatchResult = [Regex]::Matches($OrigPath, '\\')
   if ($MatchResult.Success) {
     $Separator = '\\'
@@ -42,9 +44,22 @@ function Pr_MinifyPath {
     $Last = $Pieces[-1]
   }
 
-  $AllButLast = ($AllButLast | foreach-object { $_[0] }) -join $Separator[0]
+  $AllButLast = ($AllButLast | foreach-object {
+    if (($_.Length -gt 1) -and ($_[0] -eq '.')) {
+      $_.substring(0, 2)
+    } else {
+      $_[0]
+    }
+  }) -join $Separator[0]
 
-  $AllButLast, $Last -join $Separator[0]
+  Write-Debug "AllButLast: $AllButLast"
+  Write-Debug "Last: $Last"
+
+  if ($AllButLast) {
+    $AllButLast, $Last -join $Separator[0]
+  } else {
+    $Last
+  }
 }
 
 # theming {{{1
