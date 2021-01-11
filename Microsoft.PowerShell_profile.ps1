@@ -408,7 +408,7 @@ function pwsh_git_prompt {
   }
 
   if ($CherryEqual -and $CherryEqual -ne 0) {
-    $OutString += "$(Pr_Fg($LightBlueA100))🍒$CherryEqual$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($LightBlueA100))C$CherryEqual$(Pr_Fg($Grey50)) "
   }
 
   if (($Staged -and $Staged -ne 0) -or `
