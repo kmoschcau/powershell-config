@@ -229,7 +229,7 @@ function pwsh_git_prompt_state_info {
   # Read the current operation and some additional info from git files.
   if (Test-Path -PathType Container -Path $GitDir\rebase-merge) {
     $Step = (Get-Content $GitDir\rebase-merge\msgnum)
-    $Totel = (Get-Conent $GitDir\rebase-merge\end)
+    $Totel = (Get-Content $GitDir\rebase-merge\end)
     if (Test-Path -PathType Leaf -Path $GitDir\interactive) {
       $Operation = 'REBASE-i'
     } else {
