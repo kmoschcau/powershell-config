@@ -182,7 +182,8 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 
 # Prompt {{{1
 # Continuation {{{2
-if ($env:TERM -match '^xterm-256color' -and `
+if ($env:TERM -match '^xterm-256color' -or `
+    $env:WT_SESSION -and `
     $PSVersionTable.PSVersion.Major -ge 6) {
   $SeparatorChar  = ''
   $SeparatorChar2 = ''
