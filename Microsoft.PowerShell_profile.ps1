@@ -19,6 +19,7 @@ try {
 }
 
 # helper functions {{{1
+
 function Pr_MinifyPath {
   Param (
     [string]
@@ -64,6 +65,7 @@ function Pr_MinifyPath {
 
 # theming {{{1
 # helper functions {{{2
+
 function Pr_CssColorToSGRParameters {
   Param ([string]$CssColor)
 
@@ -113,6 +115,7 @@ function Pr_Reset {
 }
 
 # color definitions {{{2
+
 $Pink          = '#ff00ff'
 $Black         = '#000000'
 
@@ -145,6 +148,7 @@ $Test          = "$(Pr_Fg($Pink))$(Pr_Bg($Black))"
 $Default       = 'white'
 
 # syntax colors {{{2
+
 Set-PSReadLineOption -Colors @{
   Command            = Pr_Fg($Teal500)
   Comment            = Pr_Fg($Grey500)
@@ -165,6 +169,7 @@ Set-PSReadLineOption -Colors @{
 }
 
 # host private data colors {{{2
+
 if ($PSVersionTable.PSVersion.Major -ge 7) {
   (Get-Host).PrivateData.FormatAccentColor     = 'Green'
   (Get-Host).PrivateData.ErrorAccentColor      = 'Cyan'
@@ -182,6 +187,7 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 
 # Prompt {{{1
 # Continuation {{{2
+
 if ($env:TERM -match '^xterm-256color' -or `
     $env:WT_SESSION -and `
     $PSVersionTable.PSVersion.Major -ge 6) {
@@ -194,12 +200,14 @@ if ($env:TERM -match '^xterm-256color' -or `
 Set-PSReadLineOption -ContinuationPrompt "$SeparatorChar"
 
 # Syntax error indicator {{{2
+
 # Set the text to change color in the prompt on syntax error
 Set-PSReadLineOption -PromptText "$SeparatorChar "
 
 # customize the prompt {{{2
 # git prompt functions {{{3
 # repo info {{{4
+
 function pwsh_git_prompt_repo_info {
   $Result =
     (git rev-parse --git-dir --is-inside-git-dir --is-bare-repository 2>$null)
@@ -212,6 +220,7 @@ function pwsh_git_prompt_repo_info {
 }
 
 # state info {{{4
+
 function pwsh_git_prompt_state_info {
   Param (
     [string]
@@ -302,38 +311,45 @@ function pwsh_git_prompt_state_info {
 }
 
 # dirty count {{{4
+
 function pwsh_git_prompt_dirty {
   (git diff --name-only --diff-filter=u 2>$null | Measure-Object -Line).Lines
 }
 
 # staged count {{{4
+
 function pwsh_git_prompt_staged {
   (git diff --staged --name-only 2>$null | Measure-Object -Line).Lines
 }
 
 # unmerged count {{{4
+
 function pwsh_git_prompt_unmerged {
   (git diff --name-only --diff-filter=U 2>$null | Measure-Object -Line).Lines
 }
 
 # untracked count {{{4
+
 function pwsh_git_prompt_untracked {
   (git ls-files --others --exclude-standard -- `
        (git rev-parse --show-toplevel) 2>$null | Measure-Object -Line).Lines
 }
 
 # stashed count {{{4
+
 function pwsh_git_prompt_stashed {
   git rev-list --walk-reflogs --count refs/stash 2>$null
 }
 
 # upstream counts {{{4
+
 function pwsh_git_prompt_upstream {
   -split (git rev-list --count --left-right --cherry-mark '@{upstream}...HEAD' `
           2>$null)
 }
 
 # main git prompt piece {{{4
+
 function pwsh_git_prompt {
   # First check if git is installed. If not exit with error.
   if (!(Get-Command git)) {
@@ -443,6 +459,7 @@ function pwsh_git_prompt {
 }
 
 # powershell prompt function {{{3
+
 function Prompt {
   # get the status first, so it is not overwritten by anything in the prompt
   # function
@@ -496,5 +513,10 @@ function Prompt {
   Write-Output $OutString
 }
 
+# Aliases {{{1
+
+Set-Alias -Name ll -Value Get-ChildItem
+
 # Clean up {{{1
+
 # Remove-Item 'Function:Pr_*'
