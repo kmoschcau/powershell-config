@@ -20,8 +20,11 @@ try {
 
 # KeyHandlers {{{3
 
-Set-PSReadlineKeyHandler -ViMode Insert -Chord Tab -Function MenuComplete
 Set-PSReadlineKeyHandler -ViMode Insert -Chord Ctrl+w -Function ViBackwardDeleteGlob
+
+Set-PSReadlineKeyHandler -ViMode Insert -Chord Tab -Function MenuComplete
+
+Set-PSReadlineKeyHandler -ViMode Insert -Chord Ctrl+RightArrow -Function AcceptNextSuggestionWord
 
 # helper functions {{{1
 
