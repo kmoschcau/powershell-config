@@ -4,19 +4,24 @@
 # PSReadLine {{{2
 
 # Change the edit mode to Vi
-Set-PSReadLineOption -EditMode Vi
+Set-PSReadlineOption -EditMode Vi
 
 # Set the indicator style for Vi normal mode
 # TODO: figure this out later
-# Set-PSReadLineOption -ViModeIndicator 'Script'
+# Set-PSReadlineOption -ViModeIndicator 'Script'
 
 # Enable auto suggestions like in fish
 try {
-  Set-PSReadLineOption -PredictionSource History
+  Set-PSReadlineOption -PredictionSource History
 } catch [System.Management.Automation.ParameterBindingException] {
   # This means we deal with a version where this is not supported, just ignore
   # it
 }
+
+# KeyHandlers {{{3
+
+Set-PSReadlineKeyHandler -ViMode Insert -Chord Tab -Function MenuComplete
+Set-PSReadlineKeyHandler -ViMode Insert -Chord Ctrl+w -Function ViBackwardDeleteGlob
 
 # helper functions {{{1
 
