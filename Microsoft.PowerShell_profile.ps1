@@ -207,23 +207,42 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 (Get-Host).PrivateData.ProgressBackgroundColor = 'Cyan'
 
 # Prompt {{{1
-# Continuation {{{2
+# Glyph compat setup {{{2
 
 if ($env:TERM -match '^xterm-256color' -or `
     $env:WT_SESSION -and `
     $PSVersionTable.PSVersion.Major -ge 6) {
-  $SeparatorChar  = ''
-  $SeparatorChar2 = ''
+  $AheadGlyph = '↑'
+  $BehindGlyph = '↓'
+  $CherryGlyph = '🍒'
+  $DirtyGlyph = '󰄱 '
+  $SeparatorGlyph  = ''
+  $SeparatorGlyph2 = ''
+  $StagedGlyph = ' '
+  $StashGlyph = '⚑ '
+  $UnmergedGlyph = ' '
+  $UntrackedGlyph = ' '
 } else {
-  $SeparatorChar  = '>'
-  $SeparatorChar2 = '>'
+  $AheadGlyph = '^'
+  $BehindGlyph = 'v'
+  $CherryGlyph = 'C'
+  $DirtyGlyph = 'D'
+  $SeparatorGlyph  = '>'
+  $SeparatorGlyph2 = '>'
+  $StagedGlyph = 'S'
+  $StashGlyph = 'St'
+  $UnmergedGlyph = 'M'
+  $UntrackedGlyph = '?'
 }
-Set-PSReadLineOption -ContinuationPrompt "$SeparatorChar"
+
+# Continuation {{{2
+
+Set-PSReadLineOption -ContinuationPrompt "$SeparatorGlyph"
 
 # Syntax error indicator {{{2
 
 # Set the text to change color in the prompt on syntax error
-Set-PSReadLineOption -PromptText "$SeparatorChar "
+Set-PSReadLineOption -PromptText "$SeparatorGlyph "
 
 # customize the prompt {{{2
 # git prompt functions {{{3
@@ -411,19 +430,19 @@ function pwsh_git_prompt {
   if ($DirWarning) {
     $OutString += "$(Pr_Fg($Orange500))"
     $OutString += "$DirWarning"
-    $OutString += "$(Pr_Fg($Grey300)) $SeparatorChar2 $(Pr_Fg($Grey50))"
+    $OutString += "$(Pr_Fg($Grey300)) $SeparatorGlyph2 $(Pr_Fg($Grey50))"
   }
 
   if ($Operation) {
     $OutString += "$(Pr_Fg($Orange500))"
     $OutString += "$Operation"
-    $OutString += "$(Pr_Fg($Grey300)) $SeparatorChar2 $(Pr_Fg($Grey50))"
+    $OutString += "$(Pr_Fg($Grey300)) $SeparatorGlyph2 $(Pr_Fg($Grey50))"
   }
 
   if ($LastTag) {
     $OutString += "$(Pr_Fg($Yellow600))"
     $OutString += "$LastTag"
-    $OutString += "$(Pr_Fg($Grey300)) $SeparatorChar2 $(Pr_Fg($Grey50))"
+    $OutString += "$(Pr_Fg($Grey300)) $SeparatorGlyph2 $(Pr_Fg($Grey50))"
   }
 
   if ($Branch) {
@@ -438,42 +457,45 @@ function pwsh_git_prompt {
   }
 
   if ($Behind -and $Behind -ne 0) {
-    $OutString += "$(Pr_Fg($LightBlueA100))↓$Behind$(Pr_Fg($Grey50)) "
+    $OutString += `
+      "$(Pr_Fg($LightBlueA100))$BehindGlyph$Behind$(Pr_Fg($Grey50)) "
   }
 
   if ($Ahead -and $Ahead -ne 0) {
-    $OutString += "$(Pr_Fg($LightBlueA100))↑$Ahead$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($LightBlueA100))$AheadGlyph$Ahead$(Pr_Fg($Grey50)) "
   }
 
   if ($CherryEqual -and $CherryEqual -ne 0) {
-    $OutString += "$(Pr_Fg($LightBlueA100))C$CherryEqual$(Pr_Fg($Grey50)) "
+    $OutString += `
+      "$(Pr_Fg($LightBlueA100))$CherryGlyph$CherryEqual$(Pr_Fg($Grey50)) "
   }
 
   if (($Staged -and $Staged -ne 0) -or `
       ($Dirty -and $Dirty -ne 0) -or `
       ($Stashes -and $Stashes -ne 0) -or `
       ($Untracked -and $Untracked -ne 0)) {
-    $OutString += "$(Pr_Fg($Grey300))$SeparatorChar2$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($Grey300))$SeparatorGlyph2$(Pr_Fg($Grey50)) "
   }
 
   if ($Stashes -and $Stashes -ne 0) {
-    $OutString += "$(Pr_Fg($Yellow500))⚑ $Stashes$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($Yellow500))$StashGlyph$Stashes$(Pr_Fg($Grey50)) "
   }
 
   if ($Staged -and $Staged -ne 0) {
-    $OutString += "$(Pr_Fg($GreenA700))● $Staged$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($GreenA700))$StagedGlyph$Staged$(Pr_Fg($Grey50)) "
   }
 
   if ($Unmerged -and $Unmerged -ne 0) {
-    $OutString += "$(Pr_Fg($Red300))✖ $Unmerged$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($Red300))$UnmergedGlyph$Unmerged$(Pr_Fg($Grey50)) "
   }
 
   if ($Dirty -and $Dirty -ne 0) {
-    $OutString += "$(Pr_Fg($RedA100))✚ $Dirty$(Pr_Fg($Grey50)) "
+    $OutString += "$(Pr_Fg($RedA100))$DirtyGlyph$Dirty$(Pr_Fg($Grey50)) "
   }
 
   if ($Untracked -and $Untracked -ne 0) {
-    $OutString += "$(Pr_Fg($RedA200))… $Untracked$(Pr_Fg($Grey50)) "
+    $OutString += `
+      "$(Pr_Fg($RedA200))$UntrackedGlyph$Untracked$(Pr_Fg($Grey50)) "
   }
 
   $OutString
@@ -503,7 +525,7 @@ function Prompt {
   $GitStatus = (pwsh_git_prompt)
   if ($GitStatus) {
     $SepBg = $Grey700
-    $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
+    $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
     $OutString += "$(Pr_Fg($Grey50))"
     $OutString += $GitStatus
     $SepFg = $Grey700
@@ -512,7 +534,7 @@ function Prompt {
   # add the last status
   if (!$LastSuccess) {
     $SepBg = $Red500
-    $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
+    $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
     $OutString += "$(Pr_Fg($Grey50))"
     if ($LastStatus) {
       $OutString += " $LastStatus "
@@ -522,11 +544,11 @@ function Prompt {
 
   # add a seperator transition for the "PromptText" option
   $SepBg = $Grey700
-  $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorChar"
+  $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
   $SepFg = $Grey700
 
   # add final separator
-  $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg_Default)$SeparatorChar"
+  $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg_Default)$SeparatorGlyph"
 
   # reset colors and add some padding
   $OutString += "$(Pr_Reset) "
