@@ -16,7 +16,9 @@ function OnViModeChange {
         Write-Host -NoNewLine "`e[5 q"
     }
 }
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
+Set-PSReadLineOption `
+  -ViModeIndicator Script `
+  -ViModeChangeHandler $Function:OnViModeChange
 
 # Enable auto suggestions like in fish
 try {
@@ -28,11 +30,14 @@ try {
 
 # KeyHandlers {{{3
 
-Set-PSReadlineKeyHandler -ViMode Insert -Chord Ctrl+w -Function ViBackwardDeleteGlob
+Set-PSReadlineKeyHandler `
+  -ViMode Insert -Chord Ctrl+w -Function ViBackwardDeleteGlob
 
-Set-PSReadlineKeyHandler -ViMode Insert -Chord Tab -Function MenuComplete
+Set-PSReadlineKeyHandler `
+  -ViMode Insert -Chord Tab -Function MenuComplete
 
-Set-PSReadlineKeyHandler -ViMode Insert -Chord Ctrl+RightArrow -Function AcceptNextSuggestionWord
+Set-PSReadlineKeyHandler `
+  -ViMode Insert -Chord Ctrl+RightArrow -Function AcceptNextSuggestionWord
 
 # helper functions {{{1
 
