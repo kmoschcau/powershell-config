@@ -539,10 +539,6 @@ function Prompt {
     }
   }
 
-  # send OSC for prompt start
-  # ("FTCS_PROMPT")
-  $OutString += "`e]133;A`e\"
-
   # send OSC for current working directory
   if ($Location.Provider.Name -eq "FileSystem") {
     $OutString += "`e]9;9;`"$($Location.ProviderPath)`"`e\"
@@ -551,6 +547,10 @@ function Prompt {
   # separator escape sequence variables
   $SepFg = "$(Pr_Fg_Default)"
   $SepBg = "$(Pr_Bg_Default)"
+
+  # send OSC for prompt start
+  # ("FTCS_PROMPT")
+  $OutString += "`e]133;A`e\"
 
   # set the starting colors
   $OutString += "$(Pr_Fg($Grey50))$(Pr_Bg($Grey400))"
