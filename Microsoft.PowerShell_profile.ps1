@@ -503,23 +503,60 @@ function pwsh_git_prompt {
 
 # powershell prompt function {{{3
 
+$Global:__LastHistoryId = -1
+
+# get the last status code in a more unixy manner
+function Global:__Terminal-Get-LastExitCode {
+  if ($? -eq $True) {
+    return 0
+  }
+
+  $LastHistoryEntry = $(Get-History -Count 1)
+  $IsPowerShellError = `
+    $Error[0].InvocationInfo.HistoryId -eq $LastHistoryEntry.Id
+  if ($IsPowershellError) {
+    return -1
+  }
+
+  return $LastExitCode
+}
+
 function Prompt {
-  # get the status first, so it is not overwritten by anything in the prompt
-  # function
-  $LastSuccess = $?
-  $LastStatus = $LastExitCode
+  $LastStatus = $(__Terminal-Get-LastExitCode)
+  $Location = $executionContext.SessionState.Path.CurrentLocation
+
+  $OutString = ''
+
+  $LastHistoryEntry = $(Get-History -Count 1)
+
+  # send operating system command (OSC) sequence for command finished
+  # ("FTCS_COMMAND_FINISHED")
+  if ($Global:__LastHistoryId -ne -1) {
+    if ($LastHistoryEntry.Id -eq $Global:__LastHistoryId) {
+      $OutString += "`e]133;D`e\"
+    } else {
+      $OutString += "`e]133;D;$LastStatus`e\"
+    }
+  }
+
+  # send OSC for prompt start
+  # ("FTCS_PROMPT")
+  $OutString += "`e]133;A`e\"
+
+  # send OSC for current working directory
+  if ($Location.Provider.Name -eq "FileSystem") {
+    $OutString += "`e]9;9;`"$($Location.ProviderPath)`"`e\"
+  }
 
   # separator escape sequence variables
   $SepFg = "$(Pr_Fg_Default)"
   $SepBg = "$(Pr_Bg_Default)"
 
-  $OutString = ''
-
   # set the starting colors
   $OutString += "$(Pr_Fg($Grey50))$(Pr_Bg($Grey400))"
 
   # add the current working directory
-  $OutString += " $(Pr_MinifyPath((Get-Location).Path)) "
+  $OutString += " $(Pr_MinifyPath($Location.ProviderPath)) "
   $SepFg = $Grey400
 
   $GitStatus = (pwsh_git_prompt)
@@ -532,13 +569,11 @@ function Prompt {
   }
 
   # add the last status
-  if (!$LastSuccess) {
+  if ($LastStatus -ne 0) {
     $SepBg = $Red500
     $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
     $OutString += "$(Pr_Fg($Grey50))"
-    if ($LastStatus) {
-      $OutString += " $LastStatus "
-    }
+    $OutString += " $LastStatus "
     $SepFg = $Red500
   }
 
@@ -553,7 +588,11 @@ function Prompt {
   # reset colors and add some padding
   $OutString += "$(Pr_Reset) "
 
-  Write-Output $OutString
+  # send OSC for prompt end/command start
+  # ("FTCS_COMMAND_START")
+  $OutString += "`e]133;B`e\"
+
+  return $OutString
 }
 
 # Aliases {{{1
