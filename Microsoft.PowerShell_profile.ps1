@@ -4,7 +4,7 @@
 # PSReadLine {{{2
 
 # Change the edit mode to Vi
-Set-PSReadlineOption -EditMode Vi
+Set-PSReadLineOption -EditMode Vi
 
 # Set the indicator style for Vi normal mode
 function OnViModeChange {
@@ -22,10 +22,10 @@ Set-PSReadLineOption `
 
 # Enable auto suggestions like in fish
 try {
-  Set-PSReadlineOption -PredictionSource History
+  Set-PSReadLineOption -PredictionSource HistoryAndPlugin
 } catch [System.Management.Automation.ParameterBindingException] {
   # This means we deal with a version where this is not supported, just ignore
-  # it
+  # it.
 }
 
 # KeyHandlers {{{3
@@ -106,33 +106,25 @@ function Pr_CssColorToSGRParameters {
 function Pr_Fg {
   Param ([string]$CssColor)
 
-  "$([char]0x1b)[38;$(Pr_CssColorToSGRParameters($CssColor))m"
-}
-
-function Pr_Fg_Default {
-  "$([char]0x1b)[39m"
+  "`e[38;$(Pr_CssColorToSGRParameters($CssColor))m"
 }
 
 function Pr_Bg {
   Param ([string]$CssColor)
 
-  "$([char]0x1b)[48;$(Pr_CssColorToSGRParameters($CssColor))m"
+  "`e[48;$(Pr_CssColorToSGRParameters($CssColor))m"
 }
 
 function Pr_Bg_Default {
-  "$([char]0x1b)[49m"
+  "`e[49m"
 }
 
 function Pr_Bold {
-  "$([char]0x1b)[1m"
+  "`e[1m"
 }
 
 function Pr_Italic {
-  "$([char]0x1b)[3m"
-}
-
-function Pr_Reset {
-  "$([char]0x1b)[0m"
+  "`e[3m"
 }
 
 # color definitions {{{2
@@ -241,7 +233,7 @@ Set-PSReadLineOption -ContinuationPrompt "$SeparatorGlyph"
 
 # Syntax error indicator {{{2
 
-# Set the text to change color in the prompt on syntax error
+# Set the text to change color in the prompt on syntax error.
 Set-PSReadLineOption -PromptText "$SeparatorGlyph "
 
 # customize the prompt {{{2
@@ -411,7 +403,7 @@ function pwsh_git_prompt {
   $DirWarning = $StateInfo[3]
   $LastTag    = $StateInfo[4]
 
-  # Prepare some variables
+  # Prepare some variables.
   $Dirty     = (pwsh_git_prompt_dirty)
   $Staged    = (pwsh_git_prompt_staged)
   $Unmerged  = (pwsh_git_prompt_unmerged)
@@ -505,7 +497,7 @@ function pwsh_git_prompt {
 
 $Global:__LastHistoryId = -1
 
-# get the last status code in a more unixy manner
+# Get the last status code in a more unixy manner.
 function Global:__Terminal-Get-LastExitCode {
   if ($? -eq $True) {
     return 0
@@ -529,7 +521,7 @@ function Prompt {
 
   $LastHistoryEntry = $(Get-History -Count 1)
 
-  # send operating system command (OSC) sequence for command finished
+  # Send the operating system command (OSC) for command finished.
   # ("FTCS_COMMAND_FINISHED")
   if ($Global:__LastHistoryId -ne -1) {
     if ($LastHistoryEntry.Id -eq $Global:__LastHistoryId) {
@@ -539,26 +531,27 @@ function Prompt {
     }
   }
 
-  # send OSC for current working directory
+  # Send OSC for current working directory.
   if ($Location.Provider.Name -eq "FileSystem") {
     $OutString += "`e]9;9;`"$($Location.ProviderPath)`"`e\"
   }
 
-  # separator escape sequence variables
-  $SepFg = "$(Pr_Fg_Default)"
+  # Set the separator escape sequence variables.
+  $SepFg = "`e[39m"
   $SepBg = "$(Pr_Bg_Default)"
 
-  # send OSC for prompt start
+  # Send OSC for prompt start.
   # ("FTCS_PROMPT")
   $OutString += "`e]133;A`e\"
 
-  # set the starting colors
+  # Set the starting colors.
   $OutString += "$(Pr_Fg($Grey50))$(Pr_Bg($Grey400))"
 
-  # add the current working directory
+  # Add the current working directory.
   $OutString += " $(Pr_MinifyPath($Location.ProviderPath)) "
   $SepFg = $Grey400
 
+  # Add the git prompt.
   $GitStatus = (pwsh_git_prompt)
   if ($GitStatus) {
     $SepBg = $Grey700
@@ -568,7 +561,7 @@ function Prompt {
     $SepFg = $Grey700
   }
 
-  # add the last status
+  # Add the last status.
   if ($LastStatus -ne 0) {
     $SepBg = $Red500
     $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
@@ -577,18 +570,18 @@ function Prompt {
     $SepFg = $Red500
   }
 
-  # add a seperator transition for the "PromptText" option
+  # Add a seperator transition for the "PromptText" option.
   $SepBg = $Grey700
   $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
   $SepFg = $Grey700
 
-  # add final separator
+  # Add the final separator.
   $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg_Default)$SeparatorGlyph"
 
-  # reset colors and add some padding
-  $OutString += "$(Pr_Reset) "
+  # Reset the colors and add some padding.
+  $OutString += "`e[0m "
 
-  # send OSC for prompt end/command start
+  # Send OSC for prompt end/command start.
   # ("FTCS_COMMAND_START")
   $OutString += "`e]133;B`e\"
 
