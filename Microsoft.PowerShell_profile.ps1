@@ -531,6 +531,9 @@ function Prompt {
     }
   }
 
+  # Set the cursor to a blinking line, because we always start in insert mode.
+  $OutString += "`e[5 q"
+
   # Send OSC for current working directory.
   if ($Location.Provider.Name -eq "FileSystem") {
     $OutString += "`e]9;9;`"$($Location.ProviderPath)`"`e\"
