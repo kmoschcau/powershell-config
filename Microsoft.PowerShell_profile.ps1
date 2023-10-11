@@ -23,6 +23,7 @@ Set-PSReadLineOption `
 # Enable auto suggestions like in fish
 try {
   Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+  Set-PSReadLineOption -PredictionViewStyle ListView
 } catch [System.Management.Automation.ParameterBindingException] {
   # This means we deal with a version where this is not supported, just ignore
   # it.
@@ -163,22 +164,24 @@ $Default       = 'white'
 # syntax colors {{{2
 
 Set-PSReadLineOption -Colors @{
-  Command            = Pr_Fg($Teal500)
-  Comment            = Pr_Fg($Grey500)
-  ContinuationPrompt = Pr_Fg($Grey400)
-  Default            = Pr_Fg($Grey700)
-  Emphasis           = Pr_Bg($Yellow500)
-  Error              = "$(Pr_Fg($Grey50))$(Pr_Bg($Red500))"
-  InlinePrediction   = Pr_Fg($Grey500)
-  Keyword            = "$(Pr_Bold)$(Pr_Fg($Orange600))"
-  Member             = Pr_Fg($Blue500)
-  Number             = "$(Pr_Fg($Blue600))$(Pr_Bg($Blue50))"
-  Operator           = Pr_Fg($Orange600)
-  Parameter          = "$(Pr_Italic)$(Pr_Fg($Orange500))"
-  Selection          = Pr_Bg($Cyan100)
-  String             = "$(Pr_Fg($Green600))$(Pr_Bg($Green50))"
-  Type               = Pr_Fg($Green500)
-  Variable           = Pr_Fg($LightGreen500)
+  Command                = Pr_Fg($Teal500)
+  Comment                = Pr_Fg($Grey500)
+  ContinuationPrompt     = Pr_Fg($Grey400)
+  Default                = Pr_Fg($Grey700)
+  Emphasis               = Pr_Bg($Yellow500)
+  Error                  = "$(Pr_Fg($Grey50))$(Pr_Bg($Red500))"
+  InlinePrediction       = Pr_Fg($Grey500)
+  ListPrediction         = Pr_Fg($Grey500)
+  ListPredictionSelected = Pr_Bg($Cyan100)
+  Keyword                = "$(Pr_Bold)$(Pr_Fg($Orange600))"
+  Member                 = Pr_Fg($Blue500)
+  Number                 = "$(Pr_Fg($Blue600))$(Pr_Bg($Blue50))"
+  Operator               = Pr_Fg($Orange600)
+  Parameter              = "$(Pr_Italic)$(Pr_Fg($Orange500))"
+  Selection              = Pr_Bg($Cyan100)
+  String                 = "$(Pr_Fg($Green600))$(Pr_Bg($Green50))"
+  Type                   = Pr_Fg($Green500)
+  Variable               = Pr_Fg($LightGreen500)
 }
 
 # host private data colors {{{2
