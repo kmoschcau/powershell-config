@@ -302,7 +302,7 @@ function pwsh_git_prompt_state_info {
     }
   }
 
-  # If there are steps and total, add it do the opration.
+  # If there are steps and total, add it do the operation.
   if ($Step -and $Total) {
     $Operation += " $Step/$Total"
   }
@@ -576,7 +576,7 @@ function Prompt {
     $SepFg = $Red500
   }
 
-  # Add a seperator transition for the "PromptText" option.
+  # Add a separator transition for the "PromptText" option.
   $SepBg = $Grey700
   $OutString += "$(Pr_Fg($SepFg))$(Pr_Bg($SepBg))$SeparatorGlyph"
   $SepFg = $Grey700
