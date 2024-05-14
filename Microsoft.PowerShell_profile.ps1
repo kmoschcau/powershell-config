@@ -9,11 +9,11 @@ Set-PSReadLineOption -EditMode Vi
 # Set the indicator style for Vi normal mode
 function OnViModeChange {
     if ($args[0] -eq 'Command') {
-        # Set the cursor to a blinking block.
-        Write-Host -NoNewLine "`e[1 q"
+        # Set the cursor to a blinking block and the cursor color.
+        Write-Host -NoNewLine "`e[1 q`e]12;rgb:01/c4/c4`e\"
     } else {
-        # Set the cursor to a blinking line.
-        Write-Host -NoNewLine "`e[5 q"
+        # Set the cursor to a blinking line and the cursor color.
+        Write-Host -NoNewLine "`e[5 q`e]12;rgb:00/7f/bc`e\"
     }
 }
 Set-PSReadLineOption `
@@ -535,7 +535,7 @@ function Prompt {
   }
 
   # Set the cursor to a blinking line, because we always start in insert mode.
-  $OutString += "`e[5 q"
+  $OutString += "`e[5 q`e]12;rgb:00/7f/bc`e\"
 
   # Send OSC for current working directory.
   if ($Location.Provider.Name -eq "FileSystem") {
