@@ -1,7 +1,8 @@
 # vim: foldmethod=marker
 
-# options {{{1
-# PSReadLine {{{2
+# options {{{
+
+# PSReadLine {{{
 
 # Change the edit mode to Vi
 Set-PSReadLineOption -EditMode Vi
@@ -29,7 +30,9 @@ try {
   # it.
 }
 
-# KeyHandlers {{{3
+# }}}
+
+# KeyHandlers {{{
 
 Set-PSReadlineKeyHandler `
   -ViMode Insert -Chord Ctrl+w -Function ViBackwardDeleteGlob
@@ -40,7 +43,9 @@ Set-PSReadlineKeyHandler `
 Set-PSReadlineKeyHandler `
   -ViMode Insert -Chord Ctrl+RightArrow -Function AcceptNextSuggestionWord
 
-# helper functions {{{1
+# }}}}}}}}}
+
+# helper functions {{{
 
 function Pr_MinifyPath {
   Param (
@@ -85,8 +90,11 @@ function Pr_MinifyPath {
   }
 }
 
-# theming {{{1
-# helper functions {{{2
+# }}}
+
+# theming {{{
+
+# helper functions {{{
 
 function Pr_CssColorToSGRParameters {
   Param ([string]$CssColor)
@@ -128,7 +136,9 @@ function Pr_Italic {
   "`e[3m"
 }
 
-# color definitions {{{2
+# }}}
+
+# color definitions {{{
 
 $Pink          = '#ff00ff'
 $Black         = '#000000'
@@ -161,7 +171,9 @@ $Grey700       = '#616161'
 $Test          = "$(Pr_Fg($Pink))$(Pr_Bg($Black))"
 $Default       = 'white'
 
-# syntax colors {{{2
+# }}}
+
+# syntax colors {{{
 
 Set-PSReadLineOption -Colors @{
   Command                = Pr_Fg($Teal500)
@@ -184,7 +196,9 @@ Set-PSReadLineOption -Colors @{
   Variable               = Pr_Fg($LightGreen500)
 }
 
-# host private data colors {{{2
+# }}}
+
+# host private data colors {{{
 
 if ($PSVersionTable.PSVersion.Major -ge 7) {
   (Get-Host).PrivateData.FormatAccentColor     = 'Green'
@@ -201,8 +215,11 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
 (Get-Host).PrivateData.ProgressForegroundColor = 'Black'
 (Get-Host).PrivateData.ProgressBackgroundColor = 'Cyan'
 
-# Prompt {{{1
-# Glyph compat setup {{{2
+# }}}}}}
+
+# Prompt {{{
+
+# Glyph compat setup {{{
 
 if ($env:TERM -match '^xterm-256color' -or `
     $env:WT_SESSION -and `
@@ -230,18 +247,26 @@ if ($env:TERM -match '^xterm-256color' -or `
   $UntrackedGlyph = '?'
 }
 
-# Continuation {{{2
+# }}}
+
+# Continuation {{{
 
 Set-PSReadLineOption -ContinuationPrompt "$SeparatorGlyph"
 
-# Syntax error indicator {{{2
+# }}}
+
+# Syntax error indicator {{{
 
 # Set the text to change color in the prompt on syntax error.
 Set-PSReadLineOption -PromptText "$SeparatorGlyph "
 
-# customize the prompt {{{2
-# git prompt functions {{{3
-# repo info {{{4
+# }}}
+
+# customize the prompt {{{
+
+# git prompt functions {{{
+
+# repo info {{{
 
 function pwsh_git_prompt_repo_info {
   $Result =
@@ -254,7 +279,9 @@ function pwsh_git_prompt_repo_info {
   }
 }
 
-# state info {{{4
+# }}}
+
+# state info {{{
 
 function pwsh_git_prompt_state_info {
   Param (
@@ -345,45 +372,59 @@ function pwsh_git_prompt_state_info {
   $LastTag
 }
 
-# dirty count {{{4
+# }}}
+
+# dirty count {{{
 
 function pwsh_git_prompt_dirty {
   (git diff --name-only --diff-filter=u 2>$null | Measure-Object -Line).Lines
 }
 
-# staged count {{{4
+# }}}
+
+# staged count {{{
 
 function pwsh_git_prompt_staged {
   (git diff --staged --name-only 2>$null | Measure-Object -Line).Lines
 }
 
-# unmerged count {{{4
+# }}}
+
+# unmerged count {{{
 
 function pwsh_git_prompt_unmerged {
   (git diff --name-only --diff-filter=U 2>$null | Measure-Object -Line).Lines
 }
 
-# untracked count {{{4
+# }}}
+
+# untracked count {{{
 
 function pwsh_git_prompt_untracked {
   (git ls-files --others --exclude-standard -- `
        (git rev-parse --show-toplevel) 2>$null | Measure-Object -Line).Lines
 }
 
-# stashed count {{{4
+# }}}
+
+# stashed count {{{
 
 function pwsh_git_prompt_stashed {
   git rev-list --walk-reflogs --count refs/stash 2>$null
 }
 
-# upstream counts {{{4
+# }}}
+
+# upstream counts {{{
 
 function pwsh_git_prompt_upstream {
   -split (git rev-list --count --left-right --cherry-mark '@{upstream}...HEAD' `
           2>$null)
 }
 
-# main git prompt piece {{{4
+# }}}
+
+# main git prompt piece {{{
 
 function pwsh_git_prompt {
   # First check if git is installed. If not exit with error.
@@ -496,7 +537,9 @@ function pwsh_git_prompt {
   $OutString
 }
 
-# powershell prompt function {{{3
+# }}}}}}
+
+# powershell prompt function {{{
 
 $Global:__LastHistoryId = -1
 
@@ -594,15 +637,21 @@ function Prompt {
   return $OutString
 }
 
-# Aliases {{{1
+# }}}}}}}}}
+
+# Aliases {{{
 
 Set-Alias -Name ll -Value Get-ChildItem
 
-# Clean up {{{1
+# }}}
+
+# Clean up {{{
 
 # Remove-Item 'Function:Pr_*'
 
-# Chocolatey {{{1
+# }}}
+
+# Chocolatey {{{
 
 # Import the Chocolatey Profile that contains the necessary code to enable
 # tab-completions to function for `choco`.
@@ -613,3 +662,5 @@ $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
 }
+
+# }}}
