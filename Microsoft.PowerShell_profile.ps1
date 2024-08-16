@@ -653,17 +653,6 @@ Set-Alias -Name ll -Value Get-ChildItem
 
 # Completions {{{
 
-# dotnet CLI {{{
-
-Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
-  param($wordToComplete, $commandAst, $cursorPosition)
-  dotnet complete --position $cursorPosition "$commandAst" | ForEach-Object {
-    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", $_)
-  }
-}
-
-# }}}
-
 # az CLI {{{
 
 Register-ArgumentCompleter -Native -CommandName az -ScriptBlock {
@@ -682,6 +671,17 @@ Register-ArgumentCompleter -Native -CommandName az -ScriptBlock {
     [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", $_)
   }
   Remove-Item $completion_file, Env:\_ARGCOMPLETE_STDOUT_FILENAME, Env:\ARGCOMPLETE_USE_TEMPFILES, Env:\COMP_LINE, Env:\COMP_POINT, Env:\_ARGCOMPLETE, Env:\_ARGCOMPLETE_SUPPRESS_SPACE, Env:\_ARGCOMPLETE_IFS, Env:\_ARGCOMPLETE_SHELL
+}
+
+# }}}
+
+# dotnet CLI {{{
+
+Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
+  param($wordToComplete, $commandAst, $cursorPosition)
+  dotnet complete --position $cursorPosition "$commandAst" | ForEach-Object {
+    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", $_)
+  }
 }
 
 # }}}
