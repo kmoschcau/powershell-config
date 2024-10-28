@@ -1,4 +1,7 @@
 # vim: foldmethod=marker
+$NonInteractive = [Environment]::GetCommandLineArgs() | Where-Object {
+  $_ -Like '-NonI*'
+}
 
 # options {{{
 
@@ -23,8 +26,10 @@ Set-PSReadLineOption `
 
 # Enable auto suggestions like in fish
 try {
-  Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-  Set-PSReadLineOption -PredictionViewStyle ListView
+  if ([Environment]::UserInteractive -And -Not $NonInteractive) {
+    Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+    Set-PSReadLineOption -PredictionViewStyle ListView
+  }
 } catch [System.Management.Automation.ParameterBindingException] {
   # This means we deal with a version where this is not supported, just ignore
   # it.
