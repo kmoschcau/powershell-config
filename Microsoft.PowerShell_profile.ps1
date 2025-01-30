@@ -933,6 +933,17 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 
 # }}}}}}
 
+# Utility functions {{{
+
+function SetUpDotnetWatch {
+  $env:DOTNET_USE_POLLING_FILE_WATCHER = "true"
+  $env:DOTNET_WATCH_RESTART_ON_RUDE_EDIT = "true"
+  $env:DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER = "true"
+  $env:DOTNET_WATCH_SUPPRESS_STATIC_FILE_HANDLING = "true"
+}
+
+# }}}
+
 # Chocolatey {{{
 
 # Import the Chocolatey Profile that contains the necessary code to enable
@@ -944,6 +955,12 @@ $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
 }
+
+# }}}
+
+# Opam {{{
+
+(& opam env --switch=default) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
 
 # }}}
 
