@@ -979,6 +979,12 @@ if (Test-Path($ChocolateyProfile)) {
 
 # }}}
 
+# Starship {{{
+
+Invoke-Expression (&starship init powershell)
+
+# }}}
+
 # Opam {{{
 
 (& opam env --switch=default) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
